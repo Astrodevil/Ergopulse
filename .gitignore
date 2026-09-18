@@ -1,0 +1,24 @@
+.DS_Store
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Local ErgoPulse session data. May contain webcam key frames.
+ergopulse_history.sqlite3*
+
+# Unrelated local project folders in this workspace.
+Hermes_Engram_Plugin/
+bettermemory/
+bharat-sentinel/
+financial-report-analyst/
+matchcraft-ai/
+pydantic-glm/
+pydantic-glm-animation-backup-20260727/
+pydantic-glm-three-mode/
+tripfix-ai/
+

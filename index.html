@@ -1,0 +1,2223 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <meta http-equiv="Cache-Control" content="no-store" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>ErgoPulse</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #000;
+      --ink: #fff;
+      --body: #d0d0d0;
+      --muted: #9a9a9a;
+      --dim: #686868;
+      --line: #262626;
+      --line-strong: #3a3a3a;
+      --panel: #0d0d0d;
+      --card: #141414;
+      --surface: rgba(13, 13, 13, .9);
+      --view-bg: #050505;
+      --grid-line: rgba(255,255,255,.03);
+      --notice-bg: rgba(0,0,0,.68);
+      --active-ink: #000;
+      --active-bg: #fff;
+      --ghost-bg: transparent;
+      --ice: #c3d9f3;
+      --good: #bfe8c6;
+      --warn: #ead59c;
+      --bad: #f0b4a4;
+      --frame-scale: 1;
+      --camera-aspect: 16 / 9;
+    }
+
+    html[data-theme="light"] {
+      color-scheme: light;
+      --bg: #f5f6f3;
+      --ink: #111;
+      --body: #333;
+      --muted: #6c6c68;
+      --dim: #94948d;
+      --line: #d9d9d2;
+      --line-strong: #b8b8b0;
+      --panel: #fbfbf8;
+      --card: #fff;
+      --surface: rgba(255, 255, 252, .93);
+      --view-bg: #eceee8;
+      --grid-line: rgba(0,0,0,.045);
+      --notice-bg: rgba(255,255,252,.82);
+      --active-ink: #fff;
+      --active-bg: #111;
+      --ice: #275d86;
+      --good: #1f7a43;
+      --warn: #806316;
+      --bad: #9a3f2e;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink); }
+
+    body {
+      font-family: "Times New Roman", Georgia, serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, select { font: inherit; color: inherit; }
+    button { cursor: pointer; border: 0; }
+    button:disabled { cursor: not-allowed; opacity: .46; }
+
+    .app {
+      width: 100%;
+      min-height: 100vh;
+      margin: 0;
+      padding: clamp(16px, 1.8vw, 36px);
+      display: grid;
+      grid-template-columns: minmax(520px, 1.08fr) minmax(560px, .92fr);
+      gap: clamp(16px, 1.6vw, 30px);
+      align-items: start;
+    }
+
+    .camera, .dashboard {
+      min-width: 0;
+      border: 1px solid var(--line);
+      background: var(--surface);
+    }
+
+    .camera {
+      display: grid;
+      grid-template-rows: auto auto auto auto;
+      align-self: start;
+    }
+
+    .dashboard {
+      min-height: calc(100vh - clamp(32px, 6vw, 72px));
+      padding: clamp(20px, 2vw, 38px);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .topbar {
+      padding: 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .top-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      min-width: 0;
+    }
+
+    .mark {
+      width: 38px;
+      height: 38px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      font: 400 13px/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      letter-spacing: 2px;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+
+    h1 {
+      font-size: clamp(21px, 2.7vw, 34px);
+      line-height: 1;
+      font-weight: 400;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+    }
+
+    .subtitle, .micro, .status, .timer, .metric-label, .section-label, .pill, .notice, .timeline-time {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+    }
+
+    .subtitle {
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .status {
+      min-height: 30px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: transparent;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .theme-btn {
+      min-height: 30px;
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: var(--ghost-bg);
+      font: 400 11px/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .theme-btn:hover {
+      color: var(--ink);
+      border-color: var(--line-strong);
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--dim);
+    }
+
+    body.ready .dot { background: var(--ink); }
+    body.running .dot { background: var(--good); }
+    body.warn .dot { background: var(--warn); }
+    body.error .dot { background: var(--bad); }
+
+    .view {
+      position: relative;
+      width: 100%;
+      min-height: 0;
+      aspect-ratio: var(--camera-aspect);
+      background:
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+        var(--view-bg);
+      background-size: 48px 48px;
+      overflow: hidden;
+    }
+
+    video, canvas.overlay {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transform-origin: center;
+    }
+
+    video { transform: scaleX(-1) scale(var(--frame-scale)); background: var(--view-bg); }
+    canvas.overlay { transform: scaleX(-1) scale(var(--frame-scale)); pointer-events: none; }
+
+    .reticle {
+      position: absolute;
+      inset: 18px;
+      border: 1px solid rgba(255, 255, 255, .15);
+      pointer-events: none;
+    }
+
+    .reticle::before, .reticle::after {
+      content: "";
+      position: absolute;
+      width: 84px;
+      height: 84px;
+      border-color: rgba(255,255,255,.72);
+    }
+
+    .reticle::before {
+      left: -1px;
+      top: -1px;
+      border-left: 2px solid;
+      border-top: 2px solid;
+    }
+
+    .reticle::after {
+      right: -1px;
+      bottom: -1px;
+      border-right: 2px solid;
+      border-bottom: 2px solid;
+    }
+
+    .camera-readout {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 18px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: end;
+      pointer-events: none;
+    }
+
+    .notice {
+      max-width: 54ch;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      color: var(--body);
+      background: var(--notice-bg);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .timer {
+      padding: 10px 12px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      color: var(--ink);
+      font-size: 12px;
+      background: var(--notice-bg);
+      white-space: nowrap;
+    }
+
+    .controls {
+      padding: 10px 14px 14px;
+      border-top: 1px solid var(--line);
+      display: grid;
+      gap: 12px;
+    }
+
+    .control-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .tool-block {
+      display: grid;
+      gap: 6px;
+    }
+
+    .camera-tools {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0;
+      align-items: center;
+    }
+
+    .tool-block .section-label {
+      margin-bottom: 0;
+    }
+
+    .segments {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .segment {
+      min-height: 42px;
+      color: var(--muted);
+      background: transparent;
+      font: 400 11px/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+    }
+
+    .segment.active {
+      color: var(--active-ink);
+      background: var(--active-bg);
+    }
+
+    .zoom-control {
+      min-height: 44px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: center;
+      color: var(--muted);
+      font: 400 11px/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+    }
+
+    .zoom-control[hidden] { display: none; }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--ink);
+    }
+
+    .primary, .ghost {
+      min-height: 46px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font: 400 12px/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      letter-spacing: 2.4px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .primary {
+      padding: 0 22px;
+      border: 1px solid var(--ink);
+      color: var(--ink);
+      background: transparent;
+    }
+
+    .primary:hover:not(:disabled) {
+      color: var(--active-ink);
+      background: var(--active-bg);
+    }
+
+    .ghost {
+      width: 46px;
+      border: 1px solid var(--line);
+      background: transparent;
+    }
+
+    .note {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .dash-head {
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: flex-start;
+    }
+
+    .section-label {
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    h2 {
+      font-size: clamp(34px, 5vw, 70px);
+      line-height: 1;
+      font-weight: 400;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+    }
+
+    .score {
+      min-width: 104px;
+      color: var(--muted);
+      text-align: right;
+      font: 400 11px/1.35 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+    }
+
+    .score strong {
+      display: block;
+      margin-top: 6px;
+      color: var(--ink);
+      font: 400 36px/1 "Times New Roman", Georgia, serif;
+      letter-spacing: 1px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .value-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .value-card {
+      min-height: 126px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      display: grid;
+      align-content: space-between;
+      gap: 14px;
+    }
+
+    .value-card strong {
+      color: var(--ink);
+      font-weight: 400;
+      font-size: 18px;
+      line-height: 1.2;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+    }
+
+    .value-card span {
+      color: var(--body);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .metric {
+      min-height: 118px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      display: grid;
+      align-content: space-between;
+      gap: 12px;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .metric-value {
+      font-size: clamp(25px, 3.5vw, 42px);
+      line-height: 1;
+      letter-spacing: 1px;
+    }
+
+    .metric-detail {
+      color: var(--body);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .pill {
+      width: max-content;
+      max-width: 100%;
+      padding: 6px 9px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 10px;
+      white-space: nowrap;
+    }
+
+    .timeline, .report, .history {
+      display: grid;
+      gap: 10px;
+    }
+
+    .camera .history {
+      padding: 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    .camera .history-list {
+      max-height: 300px;
+      overflow: auto;
+    }
+
+    .charts {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .chart-card {
+      min-height: 184px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      padding: 14px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 10px;
+    }
+
+    .chart-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: baseline;
+    }
+
+    .chart-title, .chart-value {
+      font: 400 10px/1.3 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+    }
+
+    .chart-title { color: var(--muted); }
+    .chart-value { color: var(--ink); white-space: nowrap; }
+
+    .chart {
+      width: 100%;
+      min-height: 94px;
+      overflow: visible;
+    }
+
+    .chart-grid { stroke: rgba(255,255,255,.12); stroke-width: 1; }
+    .chart-band { fill: rgba(191,232,198,.12); }
+    .chart-line { fill: none; stroke: var(--ink); stroke-width: 2; vector-effect: non-scaling-stroke; }
+    .chart-line.posture { stroke: var(--warn); }
+    .chart-line.history-line { stroke: var(--ice); }
+    .chart-fill { fill: rgba(255,255,255,.06); }
+    .chart-dot { fill: var(--ink); }
+    .chart-hit { fill: transparent; cursor: crosshair; pointer-events: all; }
+    .chart-hit:hover + .chart-dot, .chart-dot:hover { fill: var(--good); }
+    .chart-tooltip {
+      position: fixed;
+      z-index: 30;
+      left: 0;
+      top: 0;
+      max-width: 260px;
+      padding: 8px 10px;
+      border: 1px solid var(--line-strong);
+      color: var(--ink);
+      background: var(--panel);
+      box-shadow: 0 12px 30px rgba(0,0,0,.24);
+      font: 400 11px/1.35 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      letter-spacing: 1.1px;
+      text-transform: uppercase;
+      pointer-events: none;
+      opacity: 0;
+      transform: translate(-999px, -999px);
+      transition: opacity .08s ease;
+    }
+
+    .chart-tooltip.visible { opacity: 1; }
+    .chart-empty {
+      display: grid;
+      place-items: center;
+      min-height: 94px;
+      color: var(--dim);
+      border: 1px dashed var(--line);
+      font: 400 10px/1.4 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      text-align: center;
+      padding: 10px;
+    }
+
+    .chart-note {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .timeline-list {
+      max-height: 176px;
+      overflow: auto;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .timeline-row {
+      display: grid;
+      grid-template-columns: 54px 1fr;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+      color: var(--body);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .timeline-row:last-child { border-bottom: 0; }
+    .timeline-time { color: var(--muted); font-size: 10px; }
+
+    .report-box {
+      border: 1px solid var(--line);
+      background: var(--card);
+      padding: 16px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .report-headline {
+      color: var(--ink);
+      font-size: 20px;
+      line-height: 1.35;
+    }
+
+    .report-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .report-section {
+      display: grid;
+      gap: 8px;
+    }
+
+    .report-section h3 {
+      color: var(--muted);
+      font: 400 11px/1.3 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+    }
+
+    .report-section ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--body);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .text-btn {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 10px;
+      color: var(--muted);
+      background: transparent;
+      font: 400 10px/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+    }
+
+    .history-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .history-card {
+      border: 1px solid var(--line);
+      background: var(--card);
+      padding: 14px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px 16px;
+      align-items: start;
+    }
+
+    .history-score {
+      min-width: 56px;
+      color: var(--ink);
+      font-size: 32px;
+      line-height: 1;
+      text-align: center;
+    }
+
+    .history-card strong {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--ink);
+      font-weight: 400;
+      font-size: 15px;
+      line-height: 1.3;
+    }
+
+    .history-meta, .history-trend {
+      color: var(--muted);
+      font: 400 10px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+
+    .history-trend {
+      grid-column: 1 / -1;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+      color: var(--body);
+    }
+
+    .history-detail {
+      border: 1px solid var(--line);
+      background: var(--card);
+      padding: 16px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .history-detail[hidden] { display: none; }
+
+    .history-detail-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .history-detail h3 {
+      color: var(--ink);
+      font-weight: 400;
+      font-size: 20px;
+      line-height: 1.25;
+    }
+
+    .history-charts {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .frame-gallery {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .frame-card {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      display: grid;
+      gap: 8px;
+      padding: 8px;
+    }
+
+    .frame-card img {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      background: var(--view-bg);
+      border: 1px solid var(--line);
+    }
+
+    .frame-card strong {
+      color: var(--ink);
+      font: 400 11px/1.3 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+
+    .frame-card span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .loader {
+      width: 17px;
+      height: 17px;
+      border: 2px solid rgba(255,255,255,.25);
+      border-top-color: var(--ink);
+      border-radius: 999px;
+      animation: spin .8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-height: 940px), (max-width: 1500px) {
+      .camera, .dashboard { min-height: 0; }
+      .view {
+        max-height: calc(100vh - 238px);
+      }
+    }
+
+    @media (max-width: 980px) {
+      .app { grid-template-columns: 1fr; }
+      .camera, .dashboard { min-height: auto; }
+      .view {
+        min-height: 0;
+        max-height: min(68vh, 620px);
+      }
+    }
+
+    @media (max-width: 660px) {
+      .topbar, .dash-head { flex-direction: column; align-items: stretch; }
+      .status, .score { width: max-content; text-align: left; }
+      .control-row { grid-template-columns: 1fr; }
+      .camera-tools { grid-template-columns: 1fr; }
+      .primary { width: 100%; }
+      .metrics, .report-grid, .value-grid, .charts, .history-charts, .frame-gallery { grid-template-columns: 1fr; }
+      .camera-readout { grid-template-columns: 1fr; }
+      .timer { width: max-content; }
+    }
+
+    @media (max-width: 1320px) and (min-width: 661px) {
+      .charts { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="camera" aria-label="Webcam posture test">
+      <div class="topbar">
+        <div class="brand">
+          <div class="mark" aria-hidden="true">EP</div>
+          <div>
+            <h1>ErgoPulse</h1>
+            <p class="subtitle">A private 5-minute desk check for posture, blinking, and focus drift.</p>
+          </div>
+        </div>
+        <div class="top-actions">
+          <button id="themeBtn" class="theme-btn" type="button">Light mode</button>
+          <div class="status"><i class="dot"></i><span id="statusText">Loading models</span></div>
+        </div>
+      </div>
+
+      <div class="view">
+        <video id="video" playsinline autoplay muted></video>
+        <canvas id="overlay" class="overlay"></canvas>
+        <div class="reticle" aria-hidden="true"></div>
+        <div class="camera-readout">
+          <div class="notice" id="notice">Keep your face and upper shoulders visible. Analysis runs locally; Nebius receives only the final stats and a few key frames.</div>
+          <div class="timer" id="timer">00:00 / 05:00</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="tool-block">
+          <div class="camera-tools">
+            <label class="zoom-control">
+              <span>Zoom</span>
+              <input id="frameRange" type="range" min="1" max="1.8" step="0.02" value="1" />
+              <span id="frameValue">1.00x</span>
+            </label>
+          </div>
+        </div>
+        <div class="section-label">Session length</div>
+        <div class="control-row">
+          <div class="segments" aria-label="Session length">
+            <button class="segment" id="oneMinBtn" type="button">1 min test</button>
+            <button class="segment active" id="fiveMinBtn" type="button">5 min test</button>
+          </div>
+          <button id="startBtn" class="primary" type="button">Start test</button>
+        </div>
+        <p class="note">Browser background tabs can throttle webcam timers. For the cleanest test, keep this page visible and your screen awake.</p>
+      </div>
+
+      <div class="history">
+        <div class="section-head">
+          <div class="section-label">Session history</div>
+          <button id="clearHistoryBtn" class="text-btn" type="button">Clear</button>
+        </div>
+        <div id="historyList" class="history-list">
+          <div class="history-card">
+            <div class="history-score">--</div>
+            <div>
+              <strong>No saved sessions yet.</strong>
+              <div class="history-meta">Completed tests will appear here with score and trend.</div>
+            </div>
+          </div>
+        </div>
+        <div id="historyDetail" class="history-detail" hidden></div>
+      </div>
+    </section>
+
+    <section class="dashboard" aria-live="polite">
+      <div class="dash-head">
+        <div>
+          <div class="section-label">Live readout</div>
+          <h2 id="headline">Settle in.</h2>
+        </div>
+        <div class="score">Session score<strong id="score">--</strong></div>
+      </div>
+
+      <div class="value-grid">
+        <article class="value-card">
+          <strong>Why it helps</strong>
+          <span>Long coding sessions hide tiny habits: leaning forward, forgetting to blink, or slowly tilting into the screen.</span>
+        </article>
+        <article class="value-card">
+          <strong>What it reads</strong>
+          <span>Face and upper-body landmarks estimate blink rate, head drift, tilt, shoulder level, and long eye-open streaks.</span>
+        </article>
+        <article class="value-card">
+          <strong>What you get</strong>
+          <span>A practical report with what looked good, what drifted, why it matters, and fixes you can do in one minute.</span>
+        </article>
+      </div>
+
+      <div class="metrics">
+        <article class="metric">
+          <div class="metric-label">Blink rate</div>
+          <div class="metric-value" id="blinkRate">--</div>
+          <div class="metric-detail" id="blinkDetail">Typical adult baseline: 15-20/min.</div>
+          <span class="pill" id="blinkPill">Waiting</span>
+        </article>
+        <article class="metric">
+          <div class="metric-label">Head position</div>
+          <div class="metric-value" id="headState">--</div>
+          <div class="metric-detail" id="headDetail">Forward drift and tilt are estimated from face landmarks.</div>
+          <span class="pill" id="headPill">Waiting</span>
+        </article>
+        <article class="metric">
+          <div class="metric-label">Shoulders</div>
+          <div class="metric-value" id="shoulderState">--</div>
+          <div class="metric-detail" id="shoulderDetail">Upper body should stay roughly level and centered.</div>
+          <span class="pill" id="shoulderPill">Waiting</span>
+        </article>
+        <article class="metric">
+          <div class="metric-label">Eye-open streak</div>
+          <div class="metric-value" id="openStreak">--</div>
+          <div class="metric-detail" id="openDetail">Long streaks can happen when reading code intensely.</div>
+          <span class="pill" id="openPill">Waiting</span>
+        </article>
+      </div>
+
+      <div class="charts" aria-label="Session graphs">
+        <article class="chart-card">
+          <div class="chart-head">
+            <div class="chart-title">Blink timeline</div>
+            <div class="chart-value" id="blinkChartValue">--</div>
+          </div>
+          <div id="blinkChart" class="chart-empty">Start a test</div>
+          <p class="chart-note">Green band marks the 15-20/min reference range.</p>
+        </article>
+        <article class="chart-card">
+          <div class="chart-head">
+            <div class="chart-title">Posture load</div>
+            <div class="chart-value" id="postureChartValue">--</div>
+          </div>
+          <div id="postureChart" class="chart-empty">Waiting for posture samples</div>
+          <p class="chart-note">Combines forward head, tilt, shoulder level, and lean.</p>
+        </article>
+        <article class="chart-card">
+          <div class="chart-head">
+            <div class="chart-title">Score history</div>
+            <div class="chart-value" id="historyChartValue">--</div>
+          </div>
+          <div id="historyChart" class="chart-empty">Run sessions to compare</div>
+          <p class="chart-note">Saved locally on this browser.</p>
+        </article>
+      </div>
+
+      <div class="timeline">
+        <div class="section-label">Session events</div>
+        <div id="timelineList" class="timeline-list">
+          <div class="timeline-row"><span class="timeline-time">00:00</span><span>Start a test to build a second-by-second posture timeline.</span></div>
+        </div>
+      </div>
+
+      <div class="report">
+        <div class="section-label">Final report</div>
+        <div id="reportBox" class="report-box">
+          <p class="report-headline">Run a session, then stop or let the timer finish. The final report will summarize what looked good, what drifted, and what to adjust next.</p>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <canvas id="captureCanvas" hidden></canvas>
+  <div id="chartTooltip" class="chart-tooltip" role="tooltip"></div>
+
+  <script type="module">
+    const video = document.getElementById("video");
+    const overlay = document.getElementById("overlay");
+    const captureCanvas = document.getElementById("captureCanvas");
+    const themeBtn = document.getElementById("themeBtn");
+    const statusText = document.getElementById("statusText");
+    const notice = document.getElementById("notice");
+    const timer = document.getElementById("timer");
+    const startBtn = document.getElementById("startBtn");
+    const oneMinBtn = document.getElementById("oneMinBtn");
+    const fiveMinBtn = document.getElementById("fiveMinBtn");
+    const frameRange = document.getElementById("frameRange");
+    const frameValue = document.getElementById("frameValue");
+    const headline = document.getElementById("headline");
+    const score = document.getElementById("score");
+    const blinkRate = document.getElementById("blinkRate");
+    const blinkDetail = document.getElementById("blinkDetail");
+    const blinkPill = document.getElementById("blinkPill");
+    const headState = document.getElementById("headState");
+    const headDetail = document.getElementById("headDetail");
+    const headPill = document.getElementById("headPill");
+    const shoulderState = document.getElementById("shoulderState");
+    const shoulderDetail = document.getElementById("shoulderDetail");
+    const shoulderPill = document.getElementById("shoulderPill");
+    const openStreak = document.getElementById("openStreak");
+    const openDetail = document.getElementById("openDetail");
+    const openPill = document.getElementById("openPill");
+    const timelineList = document.getElementById("timelineList");
+    const reportBox = document.getElementById("reportBox");
+    const historyList = document.getElementById("historyList");
+    const historyDetail = document.getElementById("historyDetail");
+    const clearHistoryBtn = document.getElementById("clearHistoryBtn");
+    const chartTooltip = document.getElementById("chartTooltip");
+    const blinkChart = document.getElementById("blinkChart");
+    const postureChart = document.getElementById("postureChart");
+    const historyChart = document.getElementById("historyChart");
+    const blinkChartValue = document.getElementById("blinkChartValue");
+    const postureChartValue = document.getElementById("postureChartValue");
+    const historyChartValue = document.getElementById("historyChartValue");
+
+    let faceLandmarker;
+    let poseLandmarker;
+    let stream;
+    let videoTrack;
+    let wakeLock;
+    let modeSeconds = 300;
+    let running = false;
+    let startedAt = 0;
+    let endedAt = 0;
+    let lastSecond = -1;
+    let lastBlinkAt = 0;
+    let lastOpenStartedAt = 0;
+    let blinkClosed = false;
+    let baselineFaceHeight = null;
+    let baselinePitch = null;
+    let frames = [];
+    let keyFrameCandidates = {};
+    let timeline = [];
+    let samples = [];
+    let rafId = 0;
+    let lastMetrics = null;
+    let historyCache = [];
+    let selectedHistoryId = null;
+
+    const HISTORY_KEY = "ergopulse.sessions.v1";
+    const THEME_KEY = "ergopulse.theme.v1";
+
+    const state = {
+      blinkCount: 0,
+      maxOpenStreak: 0,
+      current: null,
+      visibleSamples: 0,
+      totalSamples: 0
+    };
+
+    function setState(name, text) {
+      document.body.classList.remove("ready", "running", "warn", "error");
+      if (name) document.body.classList.add(name);
+      statusText.textContent = text;
+    }
+
+    function setTheme(theme) {
+      const nextTheme = theme === "light" ? "light" : "dark";
+      document.documentElement.dataset.theme = nextTheme;
+      localStorage.setItem(THEME_KEY, nextTheme);
+      themeBtn.textContent = nextTheme === "light" ? "Dark mode" : "Light mode";
+      themeBtn.setAttribute("aria-pressed", String(nextTheme === "light"));
+    }
+
+    function initTheme() {
+      const saved = localStorage.getItem(THEME_KEY);
+      const preferred = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      setTheme(saved || preferred);
+    }
+
+    function pad(value) {
+      return String(Math.max(0, Math.floor(value))).padStart(2, "0");
+    }
+
+    function fmtTime(seconds) {
+      return `${pad(seconds / 60)}:${pad(seconds % 60)}`;
+    }
+
+    function setDuration(seconds) {
+      if (running) return;
+      modeSeconds = seconds;
+      oneMinBtn.classList.toggle("active", seconds === 60);
+      fiveMinBtn.classList.toggle("active", seconds === 300);
+      timer.textContent = `00:00 / ${fmtTime(modeSeconds)}`;
+    }
+
+    function setFrameScale(value = frameRange.value) {
+      const scale = Number(value);
+      document.documentElement.style.setProperty("--frame-scale", String(scale));
+      frameValue.textContent = `${scale.toFixed(2)}x`;
+      notice.textContent = scale <= 1.08
+        ? "Wide framing shows the full camera image, which helps the app see your face and shoulders."
+        : "Zoom crops toward your face. Slide left if your head or shoulders are cut off.";
+      resizeOverlay();
+    }
+
+    function addEvent(text, seconds = elapsedSeconds()) {
+      const row = { t: Math.max(0, Math.floor(seconds)), text };
+      timeline.push(row);
+      timeline = timeline.slice(-160);
+      timelineList.innerHTML = timeline.slice(-18).map((item) => `
+        <div class="timeline-row"><span class="timeline-time">${fmtTime(item.t)}</span><span>${escapeHtml(item.text)}</span></div>
+      `).join("");
+      timelineList.scrollTop = timelineList.scrollHeight;
+    }
+
+    function elapsedSeconds() {
+      return running ? (performance.now() - startedAt) / 1000 : (endedAt - startedAt) / 1000;
+    }
+
+    async function init() {
+      try {
+        setState("", "Loading models");
+        const {
+          FaceLandmarker,
+          PoseLandmarker,
+          FilesetResolver
+        } = await import("/vendor/mediapipe/vision_bundle.mjs");
+        const vision = await FilesetResolver.forVisionTasks("/vendor/mediapipe");
+        faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath: "/vendor/models/face_landmarker.task",
+            delegate: "GPU"
+          },
+          outputFaceBlendshapes: true,
+          runningMode: "VIDEO",
+          numFaces: 1
+        });
+        poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath: "/vendor/models/pose_landmarker_lite.task",
+            delegate: "GPU"
+          },
+          runningMode: "VIDEO"
+        });
+        await startCamera();
+        setState("ready", "Ready");
+        headline.textContent = "Start when ready.";
+        startBtn.disabled = false;
+        analyzeLoop();
+      } catch (error) {
+        setState("error", "Setup failed");
+        notice.textContent = error.message || "Could not load camera or local posture models.";
+      }
+    }
+
+    async function startCamera() {
+      if (stream) stream.getTracks().forEach((track) => track.stop());
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: "user",
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          aspectRatio: { ideal: 1.7777778 }
+        },
+        audio: false
+      });
+      videoTrack = stream.getVideoTracks()[0];
+      video.srcObject = stream;
+      await video.play();
+      updateCameraAspect();
+      setFrameScale(frameRange.value);
+      resizeOverlay();
+    }
+
+    function updateCameraAspect() {
+      if (!video.videoWidth || !video.videoHeight) return;
+      const rawAspect = video.videoWidth / video.videoHeight;
+      const clamped = Math.max(1.05, Math.min(1.9, rawAspect));
+      document.documentElement.style.setProperty("--camera-aspect", clamped.toFixed(4));
+    }
+
+    function resizeOverlay() {
+      const rect = video.getBoundingClientRect();
+      overlay.width = video.videoWidth || Math.max(1, Math.round(rect.width * window.devicePixelRatio));
+      overlay.height = video.videoHeight || Math.max(1, Math.round(rect.height * window.devicePixelRatio));
+    }
+
+    function resetSession() {
+      startedAt = performance.now();
+      endedAt = startedAt;
+      lastSecond = -1;
+      lastBlinkAt = startedAt;
+      lastOpenStartedAt = startedAt;
+      blinkClosed = false;
+      baselineFaceHeight = null;
+      baselinePitch = null;
+      frames = [];
+      keyFrameCandidates = {};
+      timeline = [];
+      samples = [];
+      state.blinkCount = 0;
+      state.maxOpenStreak = 0;
+      state.current = null;
+      state.visibleSamples = 0;
+      state.totalSamples = 0;
+      lastMetrics = null;
+      reportBox.innerHTML = `<p class="report-headline">Session running. Keep this page visible for the cleanest timing.</p>`;
+      score.textContent = "--";
+      renderCharts();
+      addEvent("Session started.");
+    }
+
+    async function startSession() {
+      if (running) {
+        await stopSession("Stopped by user.");
+        return;
+      }
+      resetSession();
+      running = true;
+      setState("running", "Testing");
+      startBtn.textContent = "Stop test";
+      oneMinBtn.disabled = true;
+      fiveMinBtn.disabled = true;
+      headline.textContent = "Measuring.";
+      notice.textContent = "Live metrics are local. At the end, a few key frames and stats go to Nebius for the report.";
+      await requestWakeLock();
+    }
+
+    async function stopSession(reason = "Session complete.") {
+      if (!running) return;
+      running = false;
+      endedAt = performance.now();
+      startBtn.disabled = true;
+      startBtn.innerHTML = `<span class="loader" aria-hidden="true"></span> Summarizing`;
+      oneMinBtn.disabled = false;
+      fiveMinBtn.disabled = false;
+      releaseWakeLock();
+      addEvent(reason);
+      setState("warn", "Summarizing");
+      headline.textContent = "Building report.";
+      await buildReport();
+      startBtn.disabled = false;
+      startBtn.textContent = "Start test";
+    }
+
+    async function requestWakeLock() {
+      try {
+        if ("wakeLock" in navigator) wakeLock = await navigator.wakeLock.request("screen");
+      } catch {
+        addEvent("Screen wake lock unavailable; keep the page visible.");
+      }
+    }
+
+    function releaseWakeLock() {
+      if (wakeLock) wakeLock.release().catch(() => {});
+      wakeLock = null;
+    }
+
+    function analyzeLoop() {
+      rafId = requestAnimationFrame(analyzeLoop);
+      if (!faceLandmarker || !poseLandmarker || video.readyState < 2) return;
+      resizeOverlay();
+      const now = performance.now();
+      const face = faceLandmarker.detectForVideo(video, now);
+      const pose = poseLandmarker.detectForVideo(video, now);
+      const sample = analyzeSample(face, pose, now);
+      state.current = sample;
+      drawOverlay(sample);
+      updateLive(sample);
+      if (running) recordSample(sample, now);
+    }
+
+    function analyzeSample(faceResult, poseResult, now) {
+      const faceLandmarks = faceResult.faceLandmarks?.[0] || null;
+      const poseLandmarks = poseResult.landmarks?.[0] || null;
+      const blendshapes = faceResult.faceBlendshapes?.[0]?.categories || [];
+      const blinkLeft = scoreFor(blendshapes, "eyeBlinkLeft");
+      const blinkRight = scoreFor(blendshapes, "eyeBlinkRight");
+      const blinkScore = (blinkLeft + blinkRight) / 2;
+      const faceBox = faceLandmarks ? bounds(faceLandmarks) : null;
+      const poseBox = poseLandmarks ? bounds(poseLandmarks) : null;
+      const leftEye = faceLandmarks?.[33] || null;
+      const rightEye = faceLandmarks?.[263] || null;
+      const nose = faceLandmarks?.[1] || null;
+      const tilt = leftEye && rightEye ? (rightEye.y - leftEye.y) * 100 : 0;
+      const eyeSpan = leftEye && rightEye ? Math.max(0.001, Math.abs(rightEye.x - leftEye.x)) : 0;
+      const eyeMidX = leftEye && rightEye ? (leftEye.x + rightEye.x) / 2 : 0;
+      const eyeMidY = leftEye && rightEye ? (leftEye.y + rightEye.y) / 2 : 0;
+      const turn = nose && eyeSpan ? ((nose.x - eyeMidX) / eyeSpan) * 100 : 0;
+      const faceHeight = faceBox ? faceBox.height : 0;
+      const pitchSignal = nose && faceHeight ? ((nose.y - eyeMidY) / faceHeight) * 100 : 0;
+      if (!running && faceHeight) {
+        baselineFaceHeight = faceHeight;
+        baselinePitch = pitchSignal;
+      }
+      if (running && faceHeight && !baselineFaceHeight && elapsedSeconds() > 2) {
+        baselineFaceHeight = faceHeight;
+        baselinePitch = pitchSignal;
+      }
+      const forwardRatio = baselineFaceHeight && faceHeight ? faceHeight / baselineFaceHeight : 1;
+      const pitchDelta = baselinePitch !== null ? pitchSignal - baselinePitch : 0;
+      const leftShoulder = poseLandmarks?.[11] || null;
+      const rightShoulder = poseLandmarks?.[12] || null;
+      const shoulderSlope = leftShoulder && rightShoulder ? Math.abs(leftShoulder.y - rightShoulder.y) * 100 : 0;
+      const shoulderMid = leftShoulder && rightShoulder ? (leftShoulder.x + rightShoulder.x) / 2 : null;
+      const lean = nose && shoulderMid !== null ? (nose.x - shoulderMid) * 100 : 0;
+      const visible = Boolean(faceLandmarks);
+
+      if (running && visible) {
+        const closed = blinkScore > 0.46;
+        if (closed && !blinkClosed && now - lastBlinkAt > 250) {
+          state.blinkCount += 1;
+          lastBlinkAt = now;
+          const openMs = Math.max(0, now - lastOpenStartedAt);
+          state.maxOpenStreak = Math.max(state.maxOpenStreak, openMs / 1000);
+          lastOpenStartedAt = now;
+          addEvent("Blink detected.");
+        }
+        blinkClosed = closed;
+      }
+
+      const openStreakSeconds = running ? Math.max(0, (now - lastBlinkAt) / 1000) : 0;
+      return {
+        now,
+        visible,
+        faceBox,
+        poseBox,
+        blinkScore,
+        blinkRate: blinkRateNow(),
+        openStreakSeconds,
+        faceHeight,
+        forwardRatio,
+        tilt,
+        turn,
+        pitchSignal,
+        pitchDelta,
+        shoulderSlope,
+        lean,
+        headState: classifyHead(forwardRatio, tilt, turn, pitchDelta),
+        shoulderState: classifyShoulders(shoulderSlope, lean)
+      };
+    }
+
+    function scoreFor(categories, name) {
+      return categories.find((item) => item.categoryName === name)?.score || 0;
+    }
+
+    function bounds(points) {
+      let minX = 1, minY = 1, maxX = 0, maxY = 0;
+      points.forEach((point) => {
+        minX = Math.min(minX, point.x);
+        minY = Math.min(minY, point.y);
+        maxX = Math.max(maxX, point.x);
+        maxY = Math.max(maxY, point.y);
+      });
+      return { minX, minY, maxX, maxY, width: maxX - minX, height: maxY - minY };
+    }
+
+    function classifyHead(forwardRatio, tilt, turn, pitchDelta) {
+      const parts = [];
+      if (forwardRatio > 1.16) parts.push("forward");
+      else if (forwardRatio > 1.08) parts.push("mild forward");
+      else if (forwardRatio < 0.9) parts.push("back");
+      else if (forwardRatio < 0.95) parts.push("mild back");
+      // The selfie preview is mirrored; invert horizontal labels so they describe the user's body direction.
+      if (Math.abs(tilt) > 0.9) parts.push(tilt > 0 ? "left tilt" : "right tilt");
+      if (Math.abs(turn) > 5.5) parts.push("side turn");
+      if (Math.abs(pitchDelta) > 4) parts.push(pitchDelta > 0 ? "looking down" : "looking up");
+      return parts.length ? parts.join(", ") : "neutral";
+    }
+
+    function classifyShoulders(slope, lean) {
+      if (!slope && !lean) return "not visible";
+      if (slope > 4.2) return "uneven";
+      if (Math.abs(lean) > 7) return lean > 0 ? "leaning left" : "leaning right";
+      return "level";
+    }
+
+    function blinkRateNow() {
+      const minutes = Math.max(0.05, elapsedSeconds() / 60);
+      return state.blinkCount / minutes;
+    }
+
+    function postureLoadFor(sample) {
+      if (!sample?.visible) return 0;
+      const forward = Math.min(1, Math.max(0, (Number(sample.forwardRatio || 1) - 1) / 0.24)) * 44;
+      const back = Math.min(1, Math.max(0, (1 - Number(sample.forwardRatio || 1)) / 0.15)) * 16;
+      const tilt = Math.min(1, Math.abs(Number(sample.tilt || 0)) / 4) * 18;
+      const turn = Math.min(1, Math.abs(Number(sample.turn || 0)) / 14) * 12;
+      const pitch = Math.min(1, Math.abs(Number(sample.pitchDelta || 0)) / 10) * 12;
+      const shoulders = Math.min(1, Number(sample.shoulderSlope || 0) / 8) * 12;
+      const lean = Math.min(1, Math.abs(Number(sample.lean || 0)) / 12) * 8;
+      return Math.round(Math.min(100, forward + back + tilt + turn + pitch + shoulders + lean));
+    }
+
+    function updateLive(sample) {
+      const rate = running ? sample.blinkRate : 0;
+      blinkRate.textContent = running ? `${Math.round(rate)}/m` : "--";
+      blinkPill.textContent = !running ? "Waiting" : rate < 10 ? "Low blink rate" : rate <= 22 ? "Healthy range" : "High";
+      blinkDetail.textContent = running ? `${state.blinkCount} blinks counted. Typical adult baseline: 15-20/min.` : "Typical adult baseline: 15-20/min.";
+
+      headState.textContent = sample.visible ? shortHead(sample.headState) : "--";
+      headDetail.textContent = sample.visible ? `Drift ${sample.forwardRatio.toFixed(2)}x, tilt ${sample.tilt.toFixed(1)}, turn ${sample.turn.toFixed(1)}, chin ${sample.pitchDelta.toFixed(1)}.` : "Face not visible.";
+      headPill.textContent = sample.visible ? sample.headState : "No face";
+
+      shoulderState.textContent = sample.shoulderState === "not visible" ? "--" : sample.shoulderState;
+      shoulderDetail.textContent = sample.shoulderState === "not visible" ? "Keep upper shoulders in frame for this metric." : `Slope ${sample.shoulderSlope.toFixed(1)}, lean ${sample.lean.toFixed(1)}.`;
+      shoulderPill.textContent = sample.shoulderState;
+
+      openStreak.textContent = running ? `${Math.round(sample.openStreakSeconds)}s` : "--";
+      openPill.textContent = !running ? "Waiting" : sample.openStreakSeconds > 12 ? "Long open streak" : "Okay";
+      openDetail.textContent = running ? `Longest eye-open stretch: ${Math.round(state.maxOpenStreak)}s.` : "Long streaks can happen when reading code intensely.";
+    }
+
+    function shortHead(value) {
+      if (value.includes("tilt")) return "tilted";
+      if (value.includes("turn")) return "turned";
+      if (value.includes("looking")) return value.includes("down") ? "down" : "up";
+      if (value.includes("forward")) return "forward";
+      if (value.includes("back")) return "back";
+      if (value.startsWith("neutral")) return "neutral";
+      return value;
+    }
+
+    function recordSample(sample, now) {
+      const second = Math.floor((now - startedAt) / 1000);
+      timer.textContent = `${fmtTime(second)} / ${fmtTime(modeSeconds)}`;
+      if (second === lastSecond) return;
+      lastSecond = second;
+      state.totalSamples += 1;
+      if (sample.visible) state.visibleSamples += 1;
+      const record = {
+        t: second,
+        visible: sample.visible,
+        blinkRate: Number(sample.blinkRate.toFixed(1)),
+        openStreak: Number(sample.openStreakSeconds.toFixed(1)),
+        headState: sample.visible ? sample.headState : "face not visible",
+        shoulderState: sample.shoulderState,
+        forwardRatio: Number(sample.forwardRatio.toFixed(2)),
+        tilt: Number(sample.tilt.toFixed(1)),
+        turn: Number(sample.turn.toFixed(1)),
+        pitchDelta: Number(sample.pitchDelta.toFixed(1)),
+        shoulderSlope: Number(sample.shoulderSlope.toFixed(1)),
+        lean: Number(sample.lean.toFixed(1)),
+        postureLoad: postureLoadFor(sample)
+      };
+      samples.push(record);
+
+      if (!sample.visible) addEvent("Face not visible.");
+      else if (sample.openStreakSeconds > 12) addEvent("Long eye-open streak.");
+      else if (sample.headState !== "neutral") addEvent(`Head ${sample.headState}.`);
+      else if (sample.shoulderState !== "level" && sample.shoulderState !== "not visible") addEvent(`Shoulders ${sample.shoulderState}.`);
+
+      updateKeyFrameCandidates(record);
+      renderCharts();
+      updateScorePreview();
+      if (second >= modeSeconds) stopSession("Timer complete.");
+    }
+
+    function updateScorePreview() {
+      const metrics = computeMetrics();
+      score.textContent = String(metrics.local_score);
+      headline.textContent = metrics.local_score >= 80 ? "Holding steady." : metrics.local_score >= 60 ? "Some drift." : "Adjust now.";
+    }
+
+    function computeMetrics() {
+      const duration = Math.max(1, elapsedSeconds());
+      const visible = state.totalSamples ? state.visibleSamples / state.totalSamples : 0;
+      const forward = ratio((s) => s.headState.includes("forward"));
+      const back = ratio((s) => s.headState.includes("back"));
+      const tilt = ratio((s) => Math.abs(s.tilt) > 0.9);
+      const turn = ratio((s) => Math.abs(s.turn || 0) > 5.5);
+      const pitch = ratio((s) => Math.abs(s.pitchDelta || 0) > 4);
+      const uneven = ratio((s) => s.shoulderState !== "level" && s.shoulderState !== "not visible");
+      const lowBlink = blinkRateNow() < 10;
+      const scoreValue = Math.max(0, Math.round(100 - forward * 28 - back * 12 - tilt * 14 - turn * 10 - pitch * 12 - uneven * 22 - (lowBlink ? 18 : 0) - (1 - visible) * 18));
+      const visibleSamples = samples.filter((sample) => sample.visible);
+      const postureLoads = visibleSamples.map((sample) => Number(sample.postureLoad || 0));
+      const averagePostureLoad = postureLoads.length ? average(postureLoads) : 0;
+      const worstPosture = maxBy(visibleSamples, (sample) => Number(sample.postureLoad || 0));
+      const baseline = visibleSamples[0] || null;
+      const finalVisible = [...visibleSamples].reverse()[0] || null;
+      return {
+        duration_seconds: Math.round(duration),
+        blink_count: state.blinkCount,
+        blink_rate_per_minute: Number(blinkRateNow().toFixed(1)),
+        typical_adult_blink_range_per_minute: "15-20",
+        longest_eye_open_seconds: Number(Math.max(state.maxOpenStreak, state.current?.openStreakSeconds || 0).toFixed(1)),
+        visible_rate_percent: Math.round(visible * 100),
+        forward_head_percent: Math.round(forward * 100),
+        backward_head_percent: Math.round(back * 100),
+        head_tilt_percent: Math.round(tilt * 100),
+        head_turn_percent: Math.round(turn * 100),
+        looking_up_or_down_percent: Math.round(pitch * 100),
+        shoulder_uneven_or_lean_percent: Math.round(uneven * 100),
+        average_posture_load_percent: Math.round(averagePostureLoad),
+        worst_posture_load_percent: Math.round(worstPosture?.postureLoad || 0),
+        local_score: scoreValue,
+        early_sample: summarizeSample(baseline),
+        final_sample: summarizeSample(finalVisible),
+        worst_posture_sample: summarizeSample(worstPosture),
+        health_grounding: [
+          "Posture feedback is based on neutral, supported desk posture: head stacked over shoulders, relaxed shoulders, supported feet, and monitor roughly arm's length away with the top at or slightly below eye level.",
+          "Long static or awkward posture can be associated with neck, shoulder, and back discomfort during long desk sessions.",
+          "Eye feedback uses blink-rate and screen-break guidance, including the 20-20-20 habit and a typical adult blink baseline of about 15-20 blinks per minute."
+        ],
+        background_visible: document.visibilityState === "visible",
+        caveat: "Single-webcam estimates. This is wellness feedback, not medical diagnosis."
+      };
+    }
+
+    function ratio(predicate) {
+      if (!samples.length) return 0;
+      return samples.filter(predicate).length / samples.length;
+    }
+
+    function average(values) {
+      return values.reduce((sum, value) => sum + Number(value || 0), 0) / Math.max(1, values.length);
+    }
+
+    function maxBy(values, scorer) {
+      return values.reduce((best, item) => {
+        if (!best) return item;
+        return scorer(item) > scorer(best) ? item : best;
+      }, null);
+    }
+
+    function summarizeSample(sample) {
+      if (!sample) return null;
+      return {
+        t: sample.t,
+        blink_rate: sample.blinkRate,
+        posture_load: sample.postureLoad,
+        head: sample.headState,
+        forward_ratio: sample.forwardRatio,
+        tilt: sample.tilt,
+        turn: sample.turn,
+        pitch_delta: sample.pitchDelta,
+        shoulders: sample.shoulderState,
+        shoulder_slope: sample.shoulderSlope,
+        lean: sample.lean,
+        eye_open_streak: sample.openStreak
+      };
+    }
+
+    function updateKeyFrameCandidates(record) {
+      if (!record.visible || video.readyState < 2) return;
+      if (!keyFrameCandidates.baseline && record.t >= 3) {
+        keyFrameCandidates.baseline = captureKeyFrame("Baseline posture", "Early visible posture reference", record);
+      }
+      if (!keyFrameCandidates.best || record.postureLoad < keyFrameCandidates.best.score) {
+        keyFrameCandidates.best = captureKeyFrame("Cleanest posture", "Lowest posture load sample", record, record.postureLoad);
+      }
+      if (record.forwardRatio > 1.06 && (!keyFrameCandidates.forward || record.forwardRatio > keyFrameCandidates.forward.score)) {
+        keyFrameCandidates.forward = captureKeyFrame("Most forward head", "Largest face-size increase from baseline", record, record.forwardRatio);
+      }
+      if (Math.abs(record.tilt) > 0.9 && (!keyFrameCandidates.tilt || Math.abs(record.tilt) > keyFrameCandidates.tilt.score)) {
+        keyFrameCandidates.tilt = captureKeyFrame("Strongest head tilt", "Largest left/right head tilt estimate", record, Math.abs(record.tilt));
+      }
+      if (Math.abs(record.pitchDelta) > 4 && (!keyFrameCandidates.pitch || Math.abs(record.pitchDelta) > keyFrameCandidates.pitch.score)) {
+        keyFrameCandidates.pitch = captureKeyFrame("Strongest chin angle", "Largest looking up or down estimate", record, Math.abs(record.pitchDelta));
+      }
+      const shoulderScore = Math.max(record.shoulderSlope / 8, Math.abs(record.lean) / 12);
+      if (shoulderScore > .55 && (!keyFrameCandidates.shoulders || shoulderScore > keyFrameCandidates.shoulders.score)) {
+        keyFrameCandidates.shoulders = captureKeyFrame("Shoulder or lean drift", "Largest shoulder unevenness or body lean estimate", record, shoulderScore);
+      }
+      if (record.openStreak > 8 && (!keyFrameCandidates.eyeOpen || record.openStreak > keyFrameCandidates.eyeOpen.score)) {
+        keyFrameCandidates.eyeOpen = captureKeyFrame("Longest eye-open streak", "Longest stretch without a detected blink", record, record.openStreak);
+      }
+    }
+
+    function captureKeyFrame(label, reason, record, scoreValue = 0) {
+      if (video.readyState < 2) return null;
+      const width = video.videoWidth || 1280;
+      const height = video.videoHeight || 960;
+      const maxSide = 850;
+      const scale = Math.min(1, maxSide / Math.max(width, height));
+      captureCanvas.width = Math.round(width * scale);
+      captureCanvas.height = Math.round(height * scale);
+      const ctx = captureCanvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
+      return {
+        label,
+        reason,
+        time_seconds: record?.t ?? Math.round(elapsedSeconds()),
+        score: Number(scoreValue || 0),
+        sample: summarizeSample(record),
+        image: captureCanvas.toDataURL("image/jpeg", .72)
+      };
+    }
+
+    function selectKeyFrames() {
+      const finalRecord = [...samples].reverse().find((sample) => sample.visible) || samples[samples.length - 1] || null;
+      if (finalRecord) {
+        keyFrameCandidates.final = captureKeyFrame("Final posture", "Last visible posture sample in this session", finalRecord);
+      }
+      const ordered = [
+        keyFrameCandidates.baseline,
+        keyFrameCandidates.final,
+        keyFrameCandidates.best,
+        keyFrameCandidates.forward,
+        keyFrameCandidates.tilt,
+        keyFrameCandidates.pitch,
+        keyFrameCandidates.shoulders,
+        keyFrameCandidates.eyeOpen
+      ].filter(Boolean);
+      const seen = new Set();
+      return ordered.filter((frame) => {
+        const key = `${frame.label}:${frame.time_seconds}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      }).slice(0, 8);
+    }
+
+    async function buildReport() {
+      frames = selectKeyFrames();
+      const metrics = computeMetrics();
+      metrics.key_frames_sent = frames.map((frame, index) => ({
+        index: index + 1,
+        label: frame.label,
+        time_seconds: frame.time_seconds,
+        reason: frame.reason,
+        sample: frame.sample
+      }));
+      lastMetrics = metrics;
+      score.textContent = String(metrics.local_score);
+      reportBox.innerHTML = `<p class="report-headline"><span class="loader" aria-hidden="true"></span> Asking Nebius to review the session...</p>`;
+      try {
+        const response = await fetch("/api/posture-summary", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ metrics, timeline: samples, frames })
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.detail || "Summary request failed.");
+        renderReport(payload.report, metrics);
+        setState("ready", "Report ready");
+        headline.textContent = "Report ready.";
+      } catch (error) {
+        setState("error", "Summary failed");
+        renderLocalReport(metrics, error.message || "Nebius summary failed.");
+      }
+    }
+
+    function renderReport(report, metrics = lastMetrics) {
+      score.textContent = report.score || score.textContent;
+      reportBox.innerHTML = `
+        <p class="report-headline">${escapeHtml(report.headline || "Session reviewed.")}</p>
+        <div class="report-grid">
+          ${reportSection("Good", report.good)}
+          ${reportSection("Needs work", report.needs_work)}
+          ${reportSection("Vision review", report.key_moment_review)}
+          ${reportSection("Before / after", report.before_after)}
+          ${reportSection("Why it matters", report.risks)}
+          ${reportSection("Fix now", report.fixes)}
+        </div>
+        <div class="report-section">
+          <h3>Next test</h3>
+          <ul>${(report.next_test || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("") || "<li>Run another 5-minute test after changing your setup.</li>"}</ul>
+        </div>
+        <span class="pill">Confidence: ${escapeHtml(report.confidence || "unknown")}</span>
+        ${renderFrameGallery(frames, "Frames sent to LLM")}
+      `;
+      if (metrics) saveSession(report, metrics, "Nebius report");
+      if (window.matchMedia("(max-width: 980px)").matches) reportBox.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function renderLocalReport(metrics, errorText) {
+      const localReport = {
+        score: metrics.local_score,
+        headline: `Local-only session saved. ${errorText}`,
+        good: [],
+        needs_work: [],
+        key_moment_review: [`${metrics.key_frames_sent?.length || 0} labeled key frames were captured for the AI review, but the Nebius summary did not complete.`],
+        before_after: [
+          metrics.early_sample && metrics.final_sample
+            ? `Early posture load ${metrics.early_sample.posture_load}%, final posture load ${metrics.final_sample.posture_load}%.`
+            : "Before/after comparison needs a visible face and shoulders in the test."
+        ],
+        risks: [
+          "Repeated forward head, tilt, shoulder hiking, or long static sitting may contribute to neck, shoulder, and back discomfort during long coding sessions.",
+          "Low blink rate or long eye-open streaks may contribute to dry-feeling or tired eyes during screen work."
+        ],
+        fixes: [
+          "Raise or move the display so your head can stay stacked over your shoulders.",
+          "Relax shoulders, support feet, and take a short movement break before the next run.",
+          "Use a 20-20-20 eye break and blink fully a few times."
+        ],
+        next_test: ["Keep your face and upper shoulders visible for the full session."],
+        confidence: "low"
+      };
+      reportBox.innerHTML = `
+        <p class="report-headline">Nebius report failed: ${escapeHtml(errorText)}</p>
+        <div class="report-grid">
+          ${reportSection("Local metrics", [
+            `Blink rate: ${metrics.blink_rate_per_minute}/min`,
+            `Forward head estimate: ${metrics.forward_head_percent}%`,
+            `Shoulder/lean estimate: ${metrics.shoulder_uneven_or_lean_percent}%`,
+            `Longest eye-open streak: ${metrics.longest_eye_open_seconds}s`
+          ])}
+          ${reportSection("Why it matters", localReport.risks)}
+          ${reportSection("Before / after", localReport.before_after)}
+          ${reportSection("Try next", [
+            "Refresh and run a shorter 1-minute test first.",
+            "Keep your face and shoulders visible.",
+            "Keep this browser tab in front while testing."
+          ])}
+        </div>
+      `;
+      saveSession(localReport, metrics, "Local fallback");
+    }
+
+    function readLocalHistory() {
+      try {
+        const raw = localStorage.getItem(HISTORY_KEY) || "[]";
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function writeLocalHistory(history) {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 100)));
+    }
+
+    function readHistory() {
+      return historyCache;
+    }
+
+    async function loadHistory() {
+      historyCache = readLocalHistory();
+      renderHistory();
+      try {
+        const response = await fetch("/api/sessions");
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || !Array.isArray(payload.sessions)) throw new Error("History API unavailable.");
+        if (payload.sessions.length) {
+          historyCache = payload.sessions;
+          writeLocalHistory(historyCache);
+          renderHistory();
+          return;
+        }
+        if (historyCache.length) {
+          await Promise.all(historyCache.slice(0, 30).map((session) => persistSession(session)));
+        }
+      } catch {
+        // Browser storage remains the fallback for static/local-only runs.
+      }
+    }
+
+    function saveSession(report, metrics, source) {
+      const previous = historyCache[0] || null;
+      const session = {
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        createdAt: new Date().toISOString(),
+        source,
+        report,
+        metrics,
+        timeline: samples.slice(),
+        events: timeline.slice(),
+        frames: frames.map(publicFrame),
+        trend: buildTrend(report, metrics, previous)
+      };
+      historyCache = [session, ...historyCache].slice(0, 100);
+      selectedHistoryId = session.id;
+      writeLocalHistory(historyCache);
+      renderHistory();
+      persistSession(session).catch(() => {});
+    }
+
+    async function persistSession(session) {
+      const response = await fetch("/api/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(session)
+      });
+      if (!response.ok) throw new Error("Could not save session.");
+    }
+
+    function buildTrend(report, metrics, previous) {
+      if (!previous) return "First saved session. Run another test to see improvement trends.";
+      const scoreDelta = Number(report.score || metrics.local_score || 0) - Number(previous.report?.score || previous.metrics?.local_score || 0);
+      const blinkDelta = Number(metrics.blink_rate_per_minute || 0) - Number(previous.metrics?.blink_rate_per_minute || 0);
+      const forwardDelta = Number(metrics.forward_head_percent || 0) - Number(previous.metrics?.forward_head_percent || 0);
+      const shoulderDelta = Number(metrics.shoulder_uneven_or_lean_percent || 0) - Number(previous.metrics?.shoulder_uneven_or_lean_percent || 0);
+      const parts = [
+        `Score ${signed(scoreDelta)}`,
+        `blink ${signed(blinkDelta)}/min`,
+        `forward head ${signed(forwardDelta)}%`,
+        `shoulder/lean ${signed(shoulderDelta)}%`
+      ];
+      return `Compared with previous: ${parts.join(", ")}.`;
+    }
+
+    function signed(value) {
+      const rounded = Math.round(value * 10) / 10;
+      return `${rounded >= 0 ? "+" : ""}${rounded}`;
+    }
+
+    function renderHistory() {
+      const history = readHistory();
+      clearHistoryBtn.disabled = history.length === 0;
+      if (!history.length) {
+        historyList.innerHTML = `
+          <div class="history-card">
+            <div class="history-score">--</div>
+            <div>
+              <strong>No saved sessions yet.</strong>
+              <div class="history-meta">Completed tests will appear here with score and trend.</div>
+            </div>
+          </div>
+        `;
+        historyDetail.hidden = true;
+        historyDetail.innerHTML = "";
+        renderCharts();
+        return;
+      }
+      if (selectedHistoryId && !history.some((session) => session.id === selectedHistoryId)) {
+        selectedHistoryId = null;
+      }
+      historyList.innerHTML = history.map((session) => {
+        const date = new Date(session.createdAt);
+        const metrics = session.metrics || {};
+        return `
+          <article class="history-card" data-session-id="${escapeAttr(session.id)}">
+            <div class="history-score">${escapeHtml(session.report?.score ?? metrics.local_score ?? "--")}</div>
+            <div>
+              <strong>${escapeHtml(session.report?.headline || "Saved posture test")}</strong>
+              <div class="history-meta">
+                ${escapeHtml(date.toLocaleString())} / ${escapeHtml(session.source || "Session")}
+                / blink ${escapeHtml(metrics.blink_rate_per_minute ?? "--")}/min
+                / forward ${escapeHtml(metrics.forward_head_percent ?? "--")}%
+                / shoulders ${escapeHtml(metrics.shoulder_uneven_or_lean_percent ?? "--")}%
+              </div>
+            </div>
+            <button class="text-btn history-open" type="button" data-session-id="${escapeAttr(session.id)}">${session.id === selectedHistoryId ? "Viewing" : "View"}</button>
+            <div class="history-trend">${escapeHtml(session.trend || "Trend unavailable.")}</div>
+          </article>
+        `;
+      }).join("");
+      renderHistoryDetail(selectedHistoryId ? history.find((session) => session.id === selectedHistoryId) : null);
+      renderCharts();
+    }
+
+    function clearHistory() {
+      historyCache = [];
+      selectedHistoryId = null;
+      localStorage.removeItem(HISTORY_KEY);
+      fetch("/api/sessions", { method: "DELETE" }).catch(() => {});
+      renderHistory();
+    }
+
+    function renderHistoryDetail(session) {
+      if (!session) {
+        historyDetail.hidden = true;
+        historyDetail.innerHTML = "";
+        return;
+      }
+      const metrics = session.metrics || {};
+      const report = session.report || {};
+      const timelineData = Array.isArray(session.timeline) ? session.timeline : [];
+      const events = Array.isArray(session.events) ? session.events : [];
+      const sentFrames = Array.isArray(session.frames) ? session.frames : [];
+      const date = new Date(session.createdAt);
+      historyDetail.hidden = false;
+      historyDetail.innerHTML = `
+        <div class="history-detail-head">
+          <div>
+            <div class="section-label">Selected session</div>
+            <h3>${escapeHtml(report.headline || "Saved ErgoPulse session")}</h3>
+            <div class="history-meta">${escapeHtml(date.toLocaleString())} / ${escapeHtml(session.source || "Session")}</div>
+          </div>
+          <div class="top-actions">
+            <button class="text-btn history-close" type="button">Close</button>
+            <div class="score">Score<strong>${escapeHtml(report.score ?? metrics.local_score ?? "--")}</strong></div>
+          </div>
+        </div>
+        <div class="history-charts">
+          <article class="chart-card">
+            <div class="chart-head">
+              <div class="chart-title">Saved blink timeline</div>
+              <div class="chart-value">${escapeHtml(metrics.blink_rate_per_minute ?? "--")}/min</div>
+            </div>
+            <div id="historyBlinkDetailChart" class="chart-empty">No saved sample stream</div>
+            <p class="chart-note">Hover points for exact saved values.</p>
+          </article>
+          <article class="chart-card">
+            <div class="chart-head">
+              <div class="chart-title">Saved posture load</div>
+              <div class="chart-value">${escapeHtml(metrics.average_posture_load_percent ?? "--")}% avg</div>
+            </div>
+            <div id="historyPostureDetailChart" class="chart-empty">No saved sample stream</div>
+            <p class="chart-note">Stored for sessions saved after this update.</p>
+          </article>
+        </div>
+        <div class="report-grid">
+          ${reportSection("Metrics", [
+            `Blink ${metrics.blink_rate_per_minute ?? "--"}/min`,
+            `Forward ${metrics.forward_head_percent ?? "--"}%`,
+            `Back ${metrics.backward_head_percent ?? "--"}%`,
+            `Up/down ${metrics.looking_up_or_down_percent ?? "--"}%`,
+            `Shoulders ${metrics.shoulder_uneven_or_lean_percent ?? "--"}%`
+          ])}
+          ${reportSection("Why it mattered", report.risks || [])}
+          ${reportSection("Fixes", report.fixes || [])}
+          ${reportSection("Events", events.slice(-6).map((event) => `${fmtTime(event.t || 0)} - ${event.text || ""}`))}
+        </div>
+        ${renderFrameGallery(sentFrames, "Saved LLM frames")}
+      `;
+
+      const visibleTimeline = timelineData.filter((sample) => sample.visible);
+      renderLineChart(document.getElementById("historyBlinkDetailChart"), timelineData.map((sample) => Number(sample.blinkRate || 0)), {
+        empty: "No saved blink samples",
+        min: 0,
+        max: 30,
+        band: [15, 20],
+        lineClass: "chart-line",
+        labels: timelineData.map((sample) => `${fmtTime(sample.t || 0)} - blink rate ${Number(sample.blinkRate || 0).toFixed(1)}/min`),
+        unit: "/min"
+      });
+      renderLineChart(document.getElementById("historyPostureDetailChart"), visibleTimeline.map((sample) => Number(sample.postureLoad || 0)), {
+        empty: "No saved posture samples",
+        min: 0,
+        max: 100,
+        lineClass: "chart-line posture",
+        labels: visibleTimeline.map((sample) => `${fmtTime(sample.t || 0)} - posture load ${Math.round(sample.postureLoad || 0)}%`),
+        unit: "%"
+      });
+    }
+
+    function publicFrame(frame) {
+      return {
+        label: frame.label || "Key frame",
+        reason: frame.reason || "Sent to LLM",
+        time_seconds: frame.time_seconds ?? null,
+        image: frame.image || "",
+        sample: frame.sample || null
+      };
+    }
+
+    function renderFrameGallery(frameList = [], title = "Frames") {
+      const usable = frameList.filter((frame) => frame?.image?.startsWith?.("data:image/"));
+      if (!usable.length) {
+        return `
+          <div class="report-section">
+            <h3>${escapeHtml(title)}</h3>
+            <ul><li>No saved LLM frames for this session.</li></ul>
+          </div>
+        `;
+      }
+      return `
+        <div class="report-section">
+          <h3>${escapeHtml(title)}</h3>
+          <div class="frame-gallery">
+            ${usable.map((frame) => `
+              <article class="frame-card">
+                <img src="${escapeAttr(frame.image)}" alt="${escapeAttr(frame.label || "LLM frame")}" />
+                <strong>${escapeHtml(frame.label || "Key frame")}${frame.time_seconds !== null && frame.time_seconds !== undefined ? ` / ${fmtTime(frame.time_seconds)}` : ""}</strong>
+                <span>${escapeHtml(frame.reason || "Sent to LLM")}</span>
+              </article>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderCharts() {
+      const blinkValues = samples.map((sample) => Number(sample.blinkRate || 0));
+      const postureValues = samples.map((sample) => sample.visible ? Number(sample.postureLoad || 0) : null).filter((value) => value !== null);
+      const blinkLabels = samples.map((sample) => `${fmtTime(sample.t)} - blink rate ${Number(sample.blinkRate || 0).toFixed(1)}/min`);
+      const postureLabels = samples
+        .filter((sample) => sample.visible)
+        .map((sample) => `${fmtTime(sample.t)} - posture load ${Math.round(sample.postureLoad || 0)}%`);
+      const history = readHistory();
+      const historySessions = history.slice(0, 10).reverse();
+      const historyValues = historySessions
+        .map((session) => Number(session.report?.score || session.metrics?.local_score || 0))
+        .filter((value) => Number.isFinite(value));
+      const historyLabels = historySessions.map((session) => {
+        const date = new Date(session.createdAt);
+        const scoreValue = Number(session.report?.score || session.metrics?.local_score || 0);
+        return `${date.toLocaleDateString()} ${date.toLocaleTimeString()} - score ${Math.round(scoreValue)}/100`;
+      });
+
+      blinkChartValue.textContent = blinkValues.length ? `${Math.round(blinkValues.at(-1))}/min` : "--";
+      postureChartValue.textContent = postureValues.length ? `${Math.round(postureValues.at(-1))}%` : "--";
+      historyChartValue.textContent = historyValues.length ? `${Math.round(historyValues.at(-1))}/100` : "--";
+
+      renderLineChart(blinkChart, blinkValues, {
+        empty: "Start a test",
+        min: 0,
+        max: 30,
+        band: [15, 20],
+        lineClass: "chart-line",
+        labels: blinkLabels,
+        unit: "/min"
+      });
+      renderLineChart(postureChart, postureValues, {
+        empty: "Waiting for posture samples",
+        min: 0,
+        max: 100,
+        lineClass: "chart-line posture",
+        labels: postureLabels,
+        unit: "%"
+      });
+      renderLineChart(historyChart, historyValues, {
+        empty: "Run sessions to compare",
+        min: 0,
+        max: 100,
+        lineClass: "chart-line history-line",
+        labels: historyLabels,
+        unit: "/100",
+        dots: true
+      });
+    }
+
+    function renderLineChart(target, values, options) {
+      if (!values.length || values.length < 2) {
+        target.className = "chart-empty";
+        target.textContent = options.empty;
+        return;
+      }
+      target.className = "";
+      const width = 240;
+      const height = 94;
+      const padX = 8;
+      const padY = 9;
+      const min = options.min;
+      const max = options.max;
+      const innerW = width - padX * 2;
+      const innerH = height - padY * 2;
+      const points = values.map((value, index) => {
+        const x = padX + (values.length === 1 ? 0 : (index / (values.length - 1)) * innerW);
+        const clamped = Math.max(min, Math.min(max, Number(value || 0)));
+        const y = padY + (1 - ((clamped - min) / (max - min))) * innerH;
+        return [Number(x.toFixed(1)), Number(y.toFixed(1)), clamped];
+      });
+      const d = points.map((point, index) => `${index ? "L" : "M"}${point[0]} ${point[1]}`).join(" ");
+      const fillD = `${d} L${points.at(-1)[0]} ${height - padY} L${points[0][0]} ${height - padY} Z`;
+      const grid = [0, .5, 1].map((line) => {
+        const y = padY + line * innerH;
+        return `<line class="chart-grid" x1="${padX}" y1="${y}" x2="${width - padX}" y2="${y}" />`;
+      }).join("");
+      const band = options.band ? chartBand(options.band, min, max, width, height, padX, padY, innerH) : "";
+      const hitDots = points.map((point, index) => {
+        const label = options.labels?.[index] || `${Number(point[2]).toFixed(1)}${options.unit || ""}`;
+        const labelAttr = escapeAttr(label);
+        const visibleDot = options.dots ? `<circle class="chart-dot" cx="${point[0]}" cy="${point[1]}" r="2.4" data-label="${labelAttr}"></circle>` : "";
+        return `<circle class="chart-hit" cx="${point[0]}" cy="${point[1]}" r="7.5" data-label="${labelAttr}"></circle>${visibleDot}`;
+      }).join("");
+      target.innerHTML = `
+        <svg class="chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Line chart">
+          ${grid}
+          ${band}
+          <path class="chart-fill" d="${fillD}" />
+          <path class="${options.lineClass}" d="${d}" />
+          ${hitDots}
+        </svg>
+      `;
+    }
+
+    function chartBand(range, min, max, width, height, padX, padY, innerH) {
+      const [low, high] = range;
+      const yHigh = padY + (1 - ((Math.min(max, high) - min) / (max - min))) * innerH;
+      const yLow = padY + (1 - ((Math.max(min, low) - min) / (max - min))) * innerH;
+      return `<rect class="chart-band" x="${padX}" y="${yHigh}" width="${width - padX * 2}" height="${Math.max(2, yLow - yHigh)}" />`;
+    }
+
+    function reportSection(title, items = []) {
+      return `
+        <div class="report-section">
+          <h3>${escapeHtml(title)}</h3>
+          <ul>${items.length ? items.map((item) => `<li>${escapeHtml(item)}</li>`).join("") : "<li>No specific note returned.</li>"}</ul>
+        </div>
+      `;
+    }
+
+    function drawOverlay(sample) {
+      const ctx = overlay.getContext("2d");
+      ctx.clearRect(0, 0, overlay.width, overlay.height);
+      ctx.save();
+      ctx.scale(overlay.width, overlay.height);
+      ctx.strokeStyle = "rgba(255,255,255,.7)";
+      ctx.lineWidth = 2 / overlay.width;
+      if (sample.faceBox) strokeBox(ctx, sample.faceBox);
+      if (sample.poseBox) {
+        ctx.strokeStyle = "rgba(195,217,243,.52)";
+        strokeBox(ctx, sample.poseBox);
+      }
+      ctx.restore();
+    }
+
+    function strokeBox(ctx, box) {
+      ctx.strokeRect(box.minX, box.minY, box.width, box.height);
+    }
+
+    function showChartTooltip(label, event) {
+      if (!label) return;
+      chartTooltip.textContent = label;
+      chartTooltip.classList.add("visible");
+      moveChartTooltip(event);
+    }
+
+    function moveChartTooltip(event) {
+      if (!chartTooltip.classList.contains("visible")) return;
+      const offset = 14;
+      const rect = chartTooltip.getBoundingClientRect();
+      const x = Math.min(window.innerWidth - rect.width - 10, event.clientX + offset);
+      const y = Math.min(window.innerHeight - rect.height - 10, event.clientY + offset);
+      chartTooltip.style.transform = `translate(${Math.max(10, x)}px, ${Math.max(10, y)}px)`;
+    }
+
+    function hideChartTooltip() {
+      chartTooltip.classList.remove("visible");
+      chartTooltip.style.transform = "translate(-999px, -999px)";
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function escapeAttr(value) {
+      return escapeHtml(value).replaceAll("`", "&#096;");
+    }
+
+    document.addEventListener("visibilitychange", () => {
+      if (running && document.visibilityState !== "visible") {
+        setState("warn", "Backgrounded");
+        addEvent("Browser tab was backgrounded; timing may be throttled.");
+      } else if (running) {
+        setState("running", "Testing");
+      }
+    });
+
+    document.addEventListener("pointerover", (event) => {
+      const point = event.target.closest?.(".chart-hit, .chart-dot");
+      if (point?.dataset?.label) showChartTooltip(point.dataset.label, event);
+    });
+
+    document.addEventListener("pointermove", (event) => {
+      if (event.target.closest?.(".chart-hit, .chart-dot")) moveChartTooltip(event);
+    });
+
+    document.addEventListener("pointerout", (event) => {
+      if (event.target.closest?.(".chart-hit, .chart-dot")) hideChartTooltip();
+    });
+
+    window.addEventListener("resize", resizeOverlay);
+    video.addEventListener("loadedmetadata", () => {
+      updateCameraAspect();
+      resizeOverlay();
+    });
+    oneMinBtn.addEventListener("click", () => setDuration(60));
+    fiveMinBtn.addEventListener("click", () => setDuration(300));
+    frameRange.addEventListener("input", () => setFrameScale(frameRange.value));
+    themeBtn.addEventListener("click", () => {
+      const current = document.documentElement.dataset.theme === "light" ? "light" : "dark";
+      setTheme(current === "light" ? "dark" : "light");
+    });
+    clearHistoryBtn.addEventListener("click", clearHistory);
+    historyList.addEventListener("click", (event) => {
+      const button = event.target.closest?.(".history-open");
+      if (!button?.dataset?.sessionId) return;
+      selectedHistoryId = button.dataset.sessionId;
+      renderHistory();
+      historyDetail.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+    historyDetail.addEventListener("click", (event) => {
+      if (!event.target.closest?.(".history-close")) return;
+      selectedHistoryId = null;
+      renderHistory();
+    });
+    startBtn.addEventListener("click", startSession);
+    startBtn.disabled = true;
+    initTheme();
+    setDuration(300);
+    setFrameScale(frameRange.value);
+    loadHistory();
+    init();
+  </script>
+</body>
+</html>
