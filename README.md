@@ -55,7 +55,7 @@ The final report is generated through [Nebius Token Factory](https://tokenfactor
 
 DeepSeek describes V4.1-Flash as a faster, more efficient model in the V4.1 family with native visual understanding and multimodal support. ErgoPulse uses that vision capability only for the end-of-session report, while live tracking stays local in the browser.
 
-For more sensitive usage, especially if you decide to send more key frames to the LLM, Nebius documents [zero-retention inference](https://nebius.com/services/token-factory/enterprise-grade-inference) for Token Factory. In zero-retention mode, request and output content is not stored or reused for training. Check your Nebius account or endpoint settings before sending sensitive images.
+For more sensitive usage, especially if you decide to send more key frames to the LLM, Enable [zero-retention](https://docs.tokenfactory.nebius.com/data-lab/chat-completions#zero-data-retention-zdr-behavior) on Token Factory. In zero-retention mode, request and output content is not stored or reused. Check your Nebius account or endpoint settings before sending sensitive images.
 
 ## Privacy Shape
 
