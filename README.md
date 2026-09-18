@@ -2,9 +2,17 @@
 
 AI-assisted webcam posture and blink checks for developers who spend long sessions at a desk.
 
-> Want to build with open models on Nebius? Register for the [Nebius Builder Program](https://dub.sh/AIStudio) and get up to **$4,400 in AI credits**. You can also discover 100+ AI projects built using open models on [awesome-ai-apps](https://github.com/Arindam200/awesome-ai-apps).
+> Want to build with open models on Nebius? Register for the [Nebius Builder Program](https://dub.sh/AIStudio) and get up to **$400 in AI credits**. You can also use open models with common coding harnesses through [Nebius TF Relay](https://nebius-tf-relay.vercel.app/), and discover 100+ AI projects built using open models on [awesome-ai-apps](https://github.com/Arindam200/awesome-ai-apps).
 
 ErgoPulse is a lightweight web app that runs a 1-minute or 5-minute desk check using your webcam. It tracks face, blink, and upper-body posture signals locally in the browser, then uses an LLM vision summary to turn the session into a practical ergonomics report.
+
+Software developers can spend hours in the same seated position, staring at nearby screens with fewer natural breaks. Over time, small habits like leaning toward the monitor, tilting the head, uneven shoulders, and long eye-open stretches can compound into eye fatigue, neck strain, shoulder tension, and back discomfort. ErgoPulse makes those patterns visible early, while they are still easy to adjust.
+
+## Screenshots
+
+![ErgoPulse dashboard](assets/screenshots/ergopulse-dashboard.png)
+
+![ErgoPulse saved session report](assets/screenshots/ergopulse-session-report.png)
 
 ## Run In Under A Minute
 
@@ -36,6 +44,7 @@ Open `http://127.0.0.1:8010/`.
 - Sends selected session metrics and key frames to Nebius Token Factory for the final report.
 - Stores session history locally in SQLite so users can compare scores, graphs, and key frames over time.
 - Shows hoverable graphs for blink rate, posture load, and score history.
+- Helps developers spot small desk-habit drift before it turns into a long-session comfort problem.
 
 ## LLM Powered By Nebius Token Factory
 
@@ -46,10 +55,13 @@ The final report is generated through [Nebius Token Factory](https://tokenfactor
 
 DeepSeek describes V4.1-Flash as a faster, more efficient model in the V4.1 family with native visual understanding and multimodal support. ErgoPulse uses that vision capability only for the end-of-session report, while live tracking stays local in the browser.
 
+For more sensitive usage, especially if you decide to send more key frames to the LLM, Nebius documents [zero-retention inference](https://nebius.com/services/token-factory/enterprise-grade-inference) for Token Factory. In zero-retention mode, request and output content is not stored or reused for training. Check your Nebius account or endpoint settings before sending sensitive images.
+
 ## Privacy Shape
 
 - Live face and pose tracking runs locally with MediaPipe in your browser.
 - Nebius receives the session metrics, recent timeline samples, and a small set of labeled key frames only when a report is generated.
+- For sensitive usage, enable Nebius Token Factory zero-retention mode before sending additional frames or personal data.
 - Session history is stored in a local SQLite database: `ergopulse_history.sqlite3`.
 - API keys stay in your local `.env` file and should never be committed.
 
@@ -77,14 +89,3 @@ Good next areas to build on:
 - Package the app with Docker for one-command local runs.
 
 Please keep the app privacy-first: local analysis by default, explicit BYOK, and no committed session data or API keys.
-
-## Tech Stack
-
-- FastAPI
-- OpenAI-compatible Python SDK
-- Nebius Token Factory
-- DeepSeek-V4.1-Flash
-- MediaPipe Face Landmarker
-- MediaPipe Pose Landmarker Lite
-- SQLite
-- Vanilla HTML/CSS/JavaScript
